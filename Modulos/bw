@@ -1,0 +1,123 @@
+#!/bin/bash
+if [[ "" = "$1" ]]; then
+clear
+echo "    ╭━━━━━━━━━━━━╮ 
+    ┣ เลือกใช้คำสั่ง
+    ┣━━━━━━━━━━━━━━━╯     
+    ┣ 1. กำหนดค่าความเร็ว          
+    ┣ 2. จัดการระบบ Auto          
+    ┣ 3. สถานะปัจจุบัน          
+    ┣━━━━━━━━━━━━━━━╯     "
+ read -p "    ┣ Number : " sm
+ if [[ "$sm" = "" ]]; then
+clear
+echo "   ╭━━━━━━━━━━━╮ 
+   ┣ โปรดพิมพ์คำสั่ง
+   ╰━━━━━━━━━━━╯ 
+ "
+ exit
+fi
+else
+sm=$1
+fi
+case "$sm" in
+1)
+setspeed
+exit
+;;
+2)
+if [[ "" = "$2" ]]; then
+clear
+echo "    ╭━━━━━━━━━━━━━━╮ 
+    ┣ เลือกใช้คำสั่ง
+    ┣━━━━━━━━━━━━━━╯     
+    ┣ 1. เปิดใช้งาน        
+    ┣ 2. ปิดใช้งาน          
+    ┣ 3. ตรวจสอบ Log         
+    ┣━━━━━━━━━━━━━━╯       "
+ read -p "    ┣ Number : " smi
+ if [[ "$smi" = "" ]]; then
+clear
+echo "    ╭━━━━━━━━━━━╮ 
+    ┣ โปรดพิมพ์คำสั่ง
+    ╰━━━━━━━━━━━╯ 
+ "
+ exit
+fi
+else
+smi=$2
+fi
+case "$smi" in
+1)
+clear
+echo
+cd /root/auto/speed
+echo "    ╭━━━━━━━━━━━━━━━━━━╮ 
+    ┣ ตั้งค่าตรวจสอบแบนวิท
+    ┣━━━━━━━━━━━━━━━━━━╯     
+    ┣ ตรวจสอบแบทวิททุกๆ กี่นาที      "
+read -p "    ┣ จำนวนนาที : " min
+echo "    ┣ เปิดใช้งานเต็มสปีดกี่ Gb/ชม    "
+read -p "    ┣ จำนวน Gb : " sh
+echo "    ┣ เปิดความเร็วกี่ Mb เมื่อใช้เกิน $sh Gb/ชม.   "
+read -p "    ┣ จำนวน Mb : " bw
+#echo "    ┣ ยกเลิกบล็อกสปีดหลังจากกี่ ชม.   "
+#read -p "    ┣ จำนวน ชม. : " hh
+
+cp .bw bandwidth.sh
+cp .chek chek
+sed -i "s/111/$sh/g" chek
+sed -i "s/222/$bw/g" chek
+#sed -i "s/333/$hh/g" chek
+sed -i "s/444/$min/g" chek
+cd
+echo "*/$min * * * * root /root/auto/speed/chek" > /etc/cron.d/speed
+service cron restart
+clear
+echo "   ╭━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╮ 
+   ┣ => เปิดใช้งานตรวจสอบอัตโนมัตเรียบร้อย
+   ┣ => ค่าที่คุณกำหนดคือ
+   ┣ => ตรวจสอบแบนวิททุกๆ $min นาที 
+   ┣ => เมื่อใช้เกิน $sh Gb/ชม. 
+   ┣ => ความเร็วจะลดอยู่ที่ $bw Mbps
+   ╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯ 
+ "
+ #┣ => จะใช้งานเต็มสปีดอีกครั้ง หลังจาก $hh ชม.
+;;
+2)
+rm /etc/cron.d/speed
+service cron restart
+cd /root/auto/speed
+./bandwidth.sh stop
+echo "    ┣  ปัจจุบันใช้งานความเร็วเต็มสปีด "  > /root/auto/speed/status
+clear
+echo "      ╭━━━━━━━━━━━━━━━━━━━━╮  "
+echo "      ┣ => ปิดใช้งานระบบเช็กอัตโนมัต        "
+echo "      ╰━━━━━━━━━━━━━━━━━━━━╯  "
+;;
+3)
+clear
+
+echo "    ╭━━━━━━━━━━━━━━━━━━━━━━━╮  "
+cat /root/auto/speed/log
+echo "    ╰━━━━━━━━━━━━━━━━━━━━━━━╯ "
+echo
+exit
+;;
+esac
+;;
+3)
+clear
+echo
+if [ -e /etc/cron.d/speed ]; then
+echo "    ╭━━━━━━━━━━━━━━━━╮  "
+echo "    ┣  เปิดใช้งานเช็กอัตโนมัต     "
+else
+echo "    ╭━━━━━━━━━━━━━━━━╮  "
+echo "    ┣  ปิดใช้งานเช็กอัตโนมัต     "
+fi
+echo "    ┣━━━━━━━━━━━━━━━━━━━━━━━╮  "
+cat /root/auto/speed/status
+echo "    ╰━━━━━━━━━━━━━━━━━━━━━━━╯ "
+;;
+esac
